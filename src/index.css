@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for glow & glass */
+body {
+  @apply bg-black text-white overflow-x-hidden;
+}
+
+.glow {
+  filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.7))
+          drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
