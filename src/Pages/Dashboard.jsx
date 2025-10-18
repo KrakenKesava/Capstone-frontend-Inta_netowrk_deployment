@@ -19,29 +19,51 @@ export default function DashboardPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [filters, setFiltersState] = useState({
-    status: { Completed: false, Pending: false, "Under Development": false },
-    createdFrom: "",
-    createdTo: "",
-    lastFrom: "",
-    lastTo: "",
-  });
+const [filters, setFiltersState] = useState({
+  status: { Completed: false, Pending: false, "Under Development": false },
+  createdFrom: "",
+  createdTo: "",
+  lastFrom: "",
+  lastTo: "",
+  sort: { key: null, order: null }, // ✅ Added sorting field
+});
+
 
   const [showNew, setShowNew] = useState(false);
   const [detailsId, setDetailsId] = useState(null);
   const [editId, setEditId] = useState(null);
 
   // ✅ Filters update logic
-  function setFilters(key, value) {
-    if (key === "status") {
-      setFiltersState((s) => ({
-        ...s,
-        status: { ...s.status, [value]: !s.status[value] },
-      }));
-      return;
-    }
+function setFilters(key, value) {
+  if (key === "status") {
+    setFiltersState((s) => ({
+      ...s,
+      status: { ...s.status, [value]: !s.status[value] },
+    }));
+  } 
+  else if (key === "sort") {
+    // Handle sorting
+    setFiltersState((s) => ({
+      ...s,
+      sort: value,
+    }));
+  } 
+  else if (key === "reset") {
+    // Handle reset (Clear Filters button)
+    setFiltersState({
+      status: { Completed: false, Pending: false, "Under Development": false },
+      createdFrom: "",
+      createdTo: "",
+      lastFrom: "",
+      lastTo: "",
+      sort: { key: null, order: null },
+    });
+  } 
+  else {
+    // Handle date filters and others
     setFiltersState((s) => ({ ...s, [key]: value }));
   }
+}
 
   const openDetails = (id) => setDetailsId(id);
   const openEdit = (id) => setEditId(id);
@@ -56,36 +78,49 @@ export default function DashboardPage() {
 
   // ✅ Filtering logic
   const filtered = useMemo(() => {
-    return projects.filter((p) => {
+    let result = projects.filter((p) => {
       if (search && !p.name.toLowerCase().includes(search.toLowerCase()))
         return false;
 
       const anyChecked = Object.values(filters.status).some(Boolean);
       if (anyChecked && !filters.status[p.status]) return false;
 
-      if (
-        filters.createdFrom &&
-        new Date(p.createdAt) < new Date(filters.createdFrom)
-      )
+      if (filters.createdFrom && new Date(p.createdAt) < new Date(filters.createdFrom))
         return false;
-      if (
-        filters.createdTo &&
-        new Date(p.createdAt) > new Date(filters.createdTo)
-      )
+      if (filters.createdTo && new Date(p.createdAt) > new Date(filters.createdTo))
         return false;
-      if (
-        filters.lastFrom &&
-        new Date(p.lastCommit) < new Date(filters.lastFrom)
-      )
+      if (filters.lastFrom && new Date(p.lastCommit) < new Date(filters.lastFrom))
         return false;
-      if (
-        filters.lastTo &&
-        new Date(p.lastCommit) > new Date(filters.lastTo)
-      )
+      if (filters.lastTo && new Date(p.lastCommit) > new Date(filters.lastTo))
         return false;
 
       return true;
     });
+
+    // ✅ Apply sorting after filtering
+    if (filters.sort?.key && filters.sort?.order) {
+      result = [...result].sort((a, b) => {
+        // Sort by project name
+        if (filters.sort.key === "name") {
+          return filters.sort.order === "asc"
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
+        }
+
+        // Sort by last commit date
+        if (filters.sort.key === "lastCommit") {
+          const dateA = new Date(a.lastCommit);
+          const dateB = new Date(b.lastCommit);
+          return filters.sort.order === "asc"
+            ? dateA - dateB
+            : dateB - dateA;
+        }
+
+        return 0;
+      });
+    }
+
+    return result;
   }, [projects, search, filters]);
 
   // ✅ Project click redirect
@@ -96,6 +131,12 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen text-gray-100 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] overflow-x-hidden">
       <NavbarDashboard search={search} setSearch={setSearch} username="Kesava" />
+  {filters.sort?.key && (
+  <div className="text-xs text-gray-400 text-right pr-10 mt-2 italic">
+    Sorting by {filters.sort.key === "name" ? "Name" : "Date"} (
+    {filters.sort.order === "asc" ? "Ascending" : "Descending"})
+  </div>
+  )}
 
       <main className="flex pt-[4.5rem] px-6 sm:px-10 gap-6 transition-all duration-500 ease-in-out">
         {/* Sidebar */}
