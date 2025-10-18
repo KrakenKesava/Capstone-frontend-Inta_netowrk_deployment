@@ -8,6 +8,8 @@ export default function Sidebar({
   setFilters,
   viewMode,
   setViewMode,
+  sort,
+  setSort,
 }) {
   return (
     <aside
@@ -101,26 +103,41 @@ export default function Sidebar({
         </div>
         </div>
 
-        {/* Apply Filters Button */}
-        <button
-        className="mt-6 w-full px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md transition-all"
-        >
-        Apply Filters
-        </button>
-        <button
-        onClick={() => {
-            setFiltersState({
-            status: { Completed: false, Pending: false, "Under Development": false },
-            createdFrom: "",
-            createdTo: "",
-            lastFrom: "",
-            lastTo: "",
-            });
-        }}
-        className="mt-3 w-full px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 font-medium transition-all"
-        >
-        Clear Filters
-        </button>
+
+        {/* Sort Controls */}
+        <div className="mt-8">
+          <label className="block text-xs text-gray-300 mb-2">Sort By</label>
+          <div className="flex gap-2 mb-2">
+            <button
+              className={`px-3 py-1 rounded bg-white/10 text-xs ${sort.by === 'name' ? 'bg-indigo-600 text-white' : 'text-gray-300'}`}
+              onClick={() => setSort((s) => ({ ...s, by: 'name' }))}
+            >
+              Name
+            </button>
+            <button
+              className={`px-3 py-1 rounded bg-white/10 text-xs ${sort.by === 'date' ? 'bg-indigo-600 text-white' : 'text-gray-300'}`}
+              onClick={() => setSort((s) => ({ ...s, by: 'date' }))}
+            >
+              Date
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1 rounded bg-white/10 text-xs ${sort.order === 'asc' ? 'bg-indigo-600 text-white' : 'text-gray-300'}`}
+              onClick={() => setSort((s) => ({ ...s, order: 'asc' }))}
+            >
+              Ascending
+            </button>
+            <button
+              className={`px-3 py-1 rounded bg-white/10 text-xs ${sort.order === 'desc' ? 'bg-indigo-600 text-white' : 'text-gray-300'}`}
+              onClick={() => setSort((s) => ({ ...s, order: 'desc' }))}
+            >
+              Descending
+            </button>
+          </div>
+        </div>
+
+
 
         {/* View Mode Switcher */}
         <div className="mt-10 border-t border-white/10 pt-5">

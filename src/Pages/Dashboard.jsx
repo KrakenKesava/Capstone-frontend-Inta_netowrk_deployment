@@ -23,29 +23,30 @@ export default function DashboardPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(true);
 
   const [search, setSearch] = useState("");
-    const [filters, setFiltersState] = useState({
+  const [filters, setFiltersState] = useState({
     status: { Completed: false, Pending: false, "Under Development": false },
     createdFrom: "",
     createdTo: "",
     lastFrom: "",
     lastTo: "",
-    });
+  });
+  const [sort, setSort] = useState({ by: 'date', order: 'desc' });
 
   const [showNew, setShowNew] = useState(false);
   const [detailsId, setDetailsId] = useState(null);
   const [editId, setEditId] = useState(null);
 
   // ✅ Filters update logic
-function setFilters(key, value) {
-  if (key === "status") {
-    setFiltersState((s) => ({
-      ...s,
-      status: { ...s.status, [value]: !s.status[value] },
-    }));
-    return;
+  function setFilters(key, value) {
+    if (key === "status") {
+      setFiltersState((s) => ({
+        ...s,
+        status: { ...s.status, [value]: !s.status[value] },
+      }));
+      return;
+    }
+    setFiltersState((s) => ({ ...s, [key]: value }));
   }
-  setFiltersState((s) => ({ ...s, [key]: value }));
-}
 
   const openDetails = (id) => setDetailsId(id);
   const openEdit = (id) => setEditId(id);
@@ -58,31 +59,53 @@ function setFilters(key, value) {
     setEditId(null);
   };
 
-  // ✅ Filtering logic
-const filtered = useMemo(() => {
-  return projects.filter((p) => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase()))
-      return false;
+  // ✅ Filtering and sorting logic
+  const filtered = useMemo(() => {
+    let arr = projects.filter((p) => {
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase()))
+        return false;
 
-    const anyChecked = Object.values(filters.status).some(Boolean);
-    if (anyChecked && !filters.status[p.status]) return false;
+      const anyChecked = Object.values(filters.status).some(Boolean);
+      if (anyChecked && !filters.status[p.status]) return false;
 
-    if (filters.createdFrom && new Date(p.createdAt) < new Date(filters.createdFrom))
-      return false;
-    if (filters.createdTo && new Date(p.createdAt) > new Date(filters.createdTo))
-      return false;
-    if (filters.lastFrom && new Date(p.lastCommit) < new Date(filters.lastFrom))
-      return false;
-    if (filters.lastTo && new Date(p.lastCommit) > new Date(filters.lastTo))
-      return false;
+      if (filters.createdFrom && new Date(p.createdAt) < new Date(filters.createdFrom))
+        return false;
+      if (filters.createdTo && new Date(p.createdAt) > new Date(filters.createdTo))
+        return false;
+      if (filters.lastFrom && new Date(p.lastCommit) < new Date(filters.lastFrom))
+        return false;
+      if (filters.lastTo && new Date(p.lastCommit) > new Date(filters.lastTo))
+        return false;
 
-    return true;
-  });
-}, [projects, search, filters]);
+      return true;
+    });
+    // Sorting
+    if (sort.by === 'name') {
+      arr = arr.sort((a, b) => {
+        if (sort.order === 'asc') {
+          return a.name.localeCompare(b.name);
+        } else {
+          return b.name.localeCompare(a.name);
+        }
+      });
+    } else if (sort.by === 'date') {
+      arr = arr.sort((a, b) => {
+        const dateA = new Date(a.lastCommit || a.createdAt);
+        const dateB = new Date(b.lastCommit || b.createdAt);
+        if (sort.order === 'asc') {
+          return dateA - dateB;
+        } else {
+          return dateB - dateA;
+        }
+      });
+    }
+    return arr;
+  }, [projects, search, filters, sort]);
 
   return (
     <div className="min-h-screen text-gray-100 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] overflow-x-hidden">
       <NavbarDashboard search={search} setSearch={setSearch} username="Kesava" />
+
 
       {/* Main Layout */}
       <main className="flex pt-[4.5rem] px-6 sm:px-10 gap-6 transition-all duration-500 ease-in-out">
@@ -94,6 +117,8 @@ const filtered = useMemo(() => {
           setFilters={setFilters}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          sort={sort}
+          setSort={setSort}
         />
 
         {/* Projects Section */}
@@ -226,6 +251,13 @@ const filtered = useMemo(() => {
 
           )}
         </section>
+        {/* Edit Modal for project editing */}
+        <EditProjectModal
+          open={!!editId}
+          project={projects.find((proj) => proj.id === editId)}
+          onClose={() => setEditId(null)}
+          onSave={handleSaveEdit}
+        />
       </main>
     </div>
   );

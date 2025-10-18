@@ -69,15 +69,14 @@ export default function ProjectCard({
         {project.description || "No description available."}
       </div>
 
-      {/* Edit Button (visible only when hovered) */}
+      {/* Edit Button (always visible, simple) */}
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
-          onEdit(project.id);
+          if (typeof onEdit === 'function') onEdit(project.id);
         }}
-        className={`absolute bottom-4 right-4 px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs transition-all duration-300 shadow-md ${
-          isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90"
-        }`}
+        className="absolute bottom-4 right-4 px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs transition-all duration-300 shadow-md"
       >
         Edit
       </button>
